@@ -7,8 +7,8 @@ const char* host = "192.168.4.1"; // Server IP address
 // Joystick pins
 const int joystick1XPin = 34; 
 const int joystick1YPin = 35; 
-const int joystick2XPin = 32;
-const int joystick2YPin = 33;
+const int joystick2XPin = 36;
+const int joystick2YPin = 39;
 
 WiFiClient client;
 

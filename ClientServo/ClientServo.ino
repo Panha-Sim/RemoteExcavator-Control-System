@@ -12,8 +12,17 @@ int joystickY1;
 int joystickX2;
 int joystickY2;
 
+
+Servo servo1;
+Servo servo2;
+int servo1Pin = 26;
+int servo2Pin = 27;
+
 void setup() {
   Serial.begin(115200);
+
+  servo1.attach(servo1Pin);
+  servo2.attach(servo2Pin);
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -66,6 +75,12 @@ void loop() {
     Serial.println("Joystick 1: X = "+ String(joystickX1) + ", Y = " + String (joystickY1));
     Serial.println("Joystick 2: X = "+ String(joystickX2) + ", Y = " + String (joystickY2));
     Serial.println();
+
+
+
+    int val = map(joystickY1,0, 4095,0,180);
+    servo1.write(map(joystickX1,0, 4095, 0, 180));
+    servo2.write(val);
 
     
   }
