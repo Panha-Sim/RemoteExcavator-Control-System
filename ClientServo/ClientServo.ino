@@ -12,11 +12,24 @@ int joystickY1;
 int joystickX2;
 int joystickY2;
 
+unsigned long curMillis;
+unsigned long readIntervalMillis = 100;
+unsigned long lastReadMillis;
+
+int servoMax = 180;
+int servoMin = 0;
+int servoMove = 5;  // number of degrees per movement
+
+int potCentre = 1840; // adjust to suit your joystick
+int potDeadRange = 300; // movements by this much either side of centre are ignored
 
 Servo servo1;
 Servo servo2;
 int servo1Pin = 26;
+int servo1Pos = 90;
 int servo2Pin = 27;
+int servo2Pos = 90;
+
 
 void setup() {
   Serial.begin(115200);
@@ -77,12 +90,54 @@ void loop() {
     Serial.println();
 
 
+    
+    curMillis = millis();
+    if (curMillis - lastReadMillis >= readIntervalMillis) {
+      lastReadMillis += readIntervalMillis;
 
-    int val = map(joystickY1,0, 4095,0,180);
-    servo1.write(map(joystickX1,0, 4095, 0, 180));
-    servo2.write(val);
+      if (joystickY1 > potCentre + potDeadRange) {
+        servo2Pos += servoMove;
+      }
+      if (joystickY1 < potCentre - potDeadRange) {
+        servo2Pos -= servoMove;
+      }
 
+      // figure if a move is required
+      if (joystickX1 > potCentre + potDeadRange) {
+        servo1Pos += servoMove;
+      }
+      if (joystickX1 < potCentre - potDeadRange) {
+        servo1Pos -= servoMove;
+      }
+      
+      checkDeadZone();
+
+	  } 
+
+    moveServo();
     
   }
 
 }
+
+void moveServo() {
+	servo1.write(servo1Pos);
+  servo2.write(servo2Pos);
+}
+
+void checkDeadZone(){
+ // check that the values are within limits
+  if (servo1Pos > servoMax) {
+    servo1Pos = servoMax;
+  }
+  if (servo1Pos < servoMin) {
+    servo1Pos = servoMin;
+  }
+  if (servo2Pos > servoMax) {
+    servo2Pos = servoMax;
+  }
+  if (servo2Pos < servoMin) {
+    servo2Pos = servoMin;
+  }
+}
+
