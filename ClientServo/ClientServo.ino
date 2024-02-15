@@ -7,35 +7,37 @@ const char* host = "192.168.4.1";
 
 WiFiClient client;
 
-int joystickX1;
-int joystickY1;
-int joystickX2;
-int joystickY2;
+// int joystickX1;
+// int joystickY1;
+// int joystickX2;
+// int joystickY2;
+
+int joystickVal[4] = {1840, 1840, 1840, 1840};
 
 unsigned long curMillis;
 unsigned long readIntervalMillis = 100;
 unsigned long lastReadMillis;
 
-int servoMax = 180;
-int servoMin = 0;
+// int servoMax = 180;
+// int servoMin = 0;
 int servoMove = 5;  // number of degrees per movement
 
 int potCentre = 1840; // adjust to suit your joystick
 int potDeadRange = 300; // movements by this much either side of centre are ignored
 
-Servo servo1;
-Servo servo2;
-int servo1Pin = 26;
-int servo1Pos = 90;
-int servo2Pin = 27;
-int servo2Pos = 90;
-
+Servo servos[4];
+int servoPin[] = {32, 33, 25, 26};
+int servoPos[] = {90, 90, 90, 90};
+int servoMax[] = {180, 180, 180, 140}; //140
+int servoMin[] = {0, 0, 0, 75}; //75
 
 void setup() {
   Serial.begin(115200);
 
-  servo1.attach(servo1Pin);
-  servo2.attach(servo2Pin);
+  //Attach Servo
+  for(int i=0;i<sizeof(servos)/sizeof(Servo); i++){
+    servos[i].attach(servoPin[i]);
+  }
 
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -79,36 +81,38 @@ void loop() {
     int y2Index = currentLine.indexOf("&y2=") + 4;
     
     //Grab Joystick Value
-    joystickX1 = currentLine.substring(x1Index, currentLine.indexOf('&', x1Index)).toInt();
-    joystickY1 = currentLine.substring(y1Index, currentLine.indexOf('&', y1Index)).toInt();
-    joystickX2 = currentLine.substring(x2Index, currentLine.indexOf('&', x2Index)).toInt();
-    joystickY2 = currentLine.substring(y2Index, currentLine.indexOf(' ', y2Index)).toInt();
-  
+    joystickVal[0] = currentLine.substring(x1Index, currentLine.indexOf('&', x1Index)).toInt();
+    joystickVal[1] = currentLine.substring(y1Index, currentLine.indexOf('&', y1Index)).toInt();
+    joystickVal[2] = currentLine.substring(x2Index, currentLine.indexOf('&', x2Index)).toInt();
+    joystickVal[3] = currentLine.substring(y2Index, currentLine.indexOf(' ', y2Index)).toInt();
+
+    // joystickVal[0] = joystickX1;
+    // joystickVal[1] = joystickY1;
+    // joystickVal[2] = joystickX2;
+    // joystickVal[3] = joystickY2;
+
     Serial.println("Receiving Joystick Value");
-    Serial.println("Joystick 1: X = "+ String(joystickX1) + ", Y = " + String (joystickY1));
-    Serial.println("Joystick 2: X = "+ String(joystickX2) + ", Y = " + String (joystickY2));
+    Serial.println("Joystick 1: X = "+ String(joystickVal[0]) + ", Y = " + String (joystickVal[1]));
+    Serial.println("Joystick 2: X = "+ String(joystickVal[2]) + ", Y = " + String (joystickVal[3]));
+    Serial.println(servoPos[3]);
     Serial.println();
 
 
+    
+    
     
     curMillis = millis();
     if (curMillis - lastReadMillis >= readIntervalMillis) {
       lastReadMillis += readIntervalMillis;
 
-      if (joystickY1 > potCentre + potDeadRange) {
-        servo2Pos += servoMove;
+    for(int i=0;i<sizeof(servos)/sizeof(Servo); i++){
+      if (joystickVal[i] > potCentre + potDeadRange) {
+        servoPos[i] += servoMove;
       }
-      if (joystickY1 < potCentre - potDeadRange) {
-        servo2Pos -= servoMove;
+      if (joystickVal[i] < potCentre - potDeadRange) {
+        servoPos[i] -= servoMove;
       }
-
-      // figure if a move is required
-      if (joystickX1 > potCentre + potDeadRange) {
-        servo1Pos += servoMove;
-      }
-      if (joystickX1 < potCentre - potDeadRange) {
-        servo1Pos -= servoMove;
-      }
+    }
       
       checkDeadZone();
 
@@ -121,23 +125,20 @@ void loop() {
 }
 
 void moveServo() {
-	servo1.write(servo1Pos);
-  servo2.write(servo2Pos);
+	for(int i = 0; i<sizeof(servos)/sizeof(Servo); i++){
+    servos[i].write(servoPos[i]);
+  }
 }
 
 void checkDeadZone(){
  // check that the values are within limits
-  if (servo1Pos > servoMax) {
-    servo1Pos = servoMax;
-  }
-  if (servo1Pos < servoMin) {
-    servo1Pos = servoMin;
-  }
-  if (servo2Pos > servoMax) {
-    servo2Pos = servoMax;
-  }
-  if (servo2Pos < servoMin) {
-    servo2Pos = servoMin;
+  for(int i=0; i < sizeof(servoPos)/sizeof(int); i++){
+    if (servoPos[i] > servoMax[i]) {
+      servoPos[i] = servoMax[i];
+    }
+    if(servoPos[i] < servoMin[i]) {
+      servoPos[i] = servoMin[i];
+    }
   }
 }
 
